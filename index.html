@@ -14,39 +14,17 @@
             color: #fff;
         }
 
-        .controls {
+        .info {
             position: fixed;
             top: 20px;
-            right: 20px;
-            background: rgba(0,0,0,0.8);
-            padding: 15px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 12px 16px;
             border-radius: 8px;
             z-index: 1000;
-            min-width: 200px;
-        }
-
-        .controls button {
-            width: 100%;
-            padding: 8px;
-            margin: 5px 0;
-            background: #4a9eff;
-            border: none;
-            border-radius: 4px;
-            color: white;
-            cursor: pointer;
-            font-size: 14px;
-        }
-
-        .controls button:hover {
-            background: #357abd;
-        }
-
-        .info {
             font-size: 12px;
-            margin-top: 10px;
-            padding-top: 10px;
-            border-top: 1px solid #444;
-            line-height: 1.5;
+            line-height: 1.6;
+            backdrop-filter: blur(10px);
         }
 
         pan-zoom {
@@ -133,17 +111,12 @@
 
 <body>
 
-<div class="controls">
-    <button onclick="resetView()">Reset View</button>
-    <button onclick="zoomIn()">Zoom In (+)</button>
-    <button onclick="zoomOut()">Zoom Out (-)</button>
-    <button onclick="runTests()">Run Tests</button>
-    <button onclick="addRandomBox()">Add Random Box</button>
-    <div class="info">
-        <div>Scale: <span id="scale">1.00</span></div>
-        <div>Pan: <span id="pan">0, 0</span></div>
-        <div>Cursor: <span id="cursor">-</span></div>
-    </div>
+<pz-controls target="pz" placement="ne"></pz-controls>
+
+<div class="info">
+    <div>Scale: <span id="scale">1.00</span></div>
+    <div>Pan: <span id="pan">0, 0</span></div>
+    <div>Cursor: <span id="cursor">-</span></div>
 </div>
 
 <pan-zoom id="pz">
@@ -224,75 +197,8 @@ document.querySelectorAll(".demo-box, .demo-circle, .demo-image").forEach(elem =
 });
 
 /* ============================================================================
-   UI CONTROLS
+   INFO DISPLAY
 ============================================================================ */
-
-function resetView() {
-    pz.reset();
-    updateInfo();
-}
-
-function zoomIn() {
-    const transform = pz.getTransform();
-    pz.setZoom(transform.scale * 1.5);
-    updateInfo();
-}
-
-function zoomOut() {
-    const transform = pz.getTransform();
-    pz.setZoom(transform.scale / 1.5);
-    updateInfo();
-}
-
-function runTests() {
-    pz.runTests();
-}
-
-function addRandomBox() {
-    const box = document.createElement("div");
-    box.className = "demo-box";
-    box.textContent = `Box ${draggables.length + 1}`;
-    box.style.left = `${Math.random() * 600}px`;
-    box.style.top = `${Math.random() * 400}px`;
-    box.style.background = `hsl(${Math.random() * 360}, 70%, 60%)`;
-
-    pz.appendChild(box);
-
-    // Make it draggable
-    const dragState = {
-        element: box,
-        isDragging: false,
-        worldOffsetX: 0,
-        worldOffsetY: 0
-    };
-
-    draggables.push(dragState);
-
-    box.addEventListener("pointerdown", e => {
-        e.stopPropagation();
-        dragState.isDragging = true;
-
-        const currentX = parseFloat(box.style.left) || 0;
-        const currentY = parseFloat(box.style.top) || 0;
-        const world = pz.toWorld(e.clientX, e.clientY);
-
-        dragState.worldOffsetX = world.wx - currentX;
-        dragState.worldOffsetY = world.wy - currentY;
-
-        box.setPointerCapture(e.pointerId);
-    });
-
-    box.addEventListener("pointermove", e => {
-        if (!dragState.isDragging) return;
-        const world = pz.toWorld(e.clientX, e.clientY);
-        box.style.left = `${world.wx - dragState.worldOffsetX}px`;
-        box.style.top = `${world.wy - dragState.worldOffsetY}px`;
-    });
-
-    box.addEventListener("pointerup", () => {
-        dragState.isDragging = false;
-    });
-}
 
 // Update info display
 function updateInfo() {
@@ -310,13 +216,12 @@ pz.addEventListener("pointermove", e => {
 });
 
 // Listen to transform events
-pz.addEventListener("pztransform", () => {
+pz.addEventListener("pz-transform", () => {
     updateInfo();
 });
 
-// Run tests on load
-console.log("%cPanZoom 3.0 initialized. Click 'Run Tests' to verify functionality.",
-    "color: #4a9eff; font-size: 14px;");
+// Initialize info display
+updateInfo();
 
 </script>
 

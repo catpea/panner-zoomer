@@ -28,11 +28,15 @@
 
    Events:
      pz-pointerdown, pz-pointermove, pz-pointerup - Pan events
-     pz-wheel                          - Zoom events
-     pztransform                     - Any transform change
+     pz-wheel                                      - Zoom events
+     pz-transform                                  - Any transform change
 ============================================================================ */
 
 class PanZoomElement extends HTMLElement {
+    static get observedAttributes() {
+        return ['panx', 'pany', 'zoom'];
+    }
+
     constructor() {
         super();
         this.attachShadow({ mode: "open" });
@@ -40,15 +44,18 @@ class PanZoomElement extends HTMLElement {
         // Create shadow DOM structure
         this._createDOMStructure();
 
-        // Initialize transform state
-        this._scale = 1;
-        this._panX = 0;
-        this._panY = 0;
+        // Initialize transform state from attributes or defaults
+        this._scale = parseFloat(this.getAttribute('zoom')) || 1;
+        this._panX = parseFloat(this.getAttribute('panx')) || 0;
+        this._panY = parseFloat(this.getAttribute('pany')) || 0;
 
         // Pan interaction state
         this._isPanning = false;
         this._lastPointerX = 0;
         this._lastPointerY = 0;
+
+        // Flag to prevent infinite loops when updating attributes
+        this._updatingAttributes = false;
 
         // Configuration
         this._minScale = 0.1;
@@ -60,6 +67,32 @@ class PanZoomElement extends HTMLElement {
 
         // Initial render
         this._applyTransform();
+    }
+
+    /* ========================================================================
+       ATTRIBUTE HANDLING
+    ======================================================================== */
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (oldValue === newValue || this._updatingAttributes) return;
+
+        const value = parseFloat(newValue);
+        if (isNaN(value)) return;
+
+        switch (name) {
+            case 'panx':
+                this._panX = value;
+                this._applyTransform();
+                break;
+            case 'pany':
+                this._panY = value;
+                this._applyTransform();
+                break;
+            case 'zoom':
+                this._scale = Math.max(this._minScale, Math.min(this._maxScale, value));
+                this._applyTransform();
+                break;
+        }
     }
 
     /* ========================================================================
@@ -207,6 +240,13 @@ class PanZoomElement extends HTMLElement {
         // Apply CSS transform
         this._content.style.transform =
             `translate(${this._panX}px, ${this._panY}px) scale(${this._scale})`;
+
+        // Update attributes to reflect current state
+        this._updatingAttributes = true;
+        this.setAttribute('panx', this._panX.toString());
+        this.setAttribute('pany', this._panY.toString());
+        this.setAttribute('zoom', this._scale.toString());
+        this._updatingAttributes = false;
 
         // Dispatch transform event
         this.dispatchEvent(new CustomEvent("pz-transform", {
@@ -619,3 +659,183 @@ class PanZoomElement extends HTMLElement {
 
 // Register the custom element
 customElements.define("pan-zoom", PanZoomElement);
+
+/* ============================================================================
+   PZ-CONTROLS - Control Panel Component
+
+   A companion component for pan-zoom that provides UI controls.
+
+   Usage:
+     <pz-controls target="pz-id" placement="ne"></pz-controls>
+
+   Attributes:
+     target    - ID of the pan-zoom element to control
+     placement - Position: ne (northeast), nw (northwest), se (southeast), sw (southwest)
+============================================================================ */
+
+class PZControlsElement extends HTMLElement {
+    static get observedAttributes() {
+        return ['target', 'placement'];
+    }
+
+    constructor() {
+        super();
+        this.attachShadow({ mode: "open" });
+        this._targetElement = null;
+
+        this._createDOM();
+        this._setupEventListeners();
+    }
+
+    connectedCallback() {
+        this._connectToTarget();
+    }
+
+    attributeChangedCallback(name, oldValue, newValue) {
+        if (name === 'target') {
+            this._connectToTarget();
+        } else if (name === 'placement') {
+            this._updatePlacement();
+        }
+    }
+
+    _createDOM() {
+        const style = document.createElement('style');
+        style.textContent = `
+            :host {
+                position: fixed;
+                z-index: 1000;
+                background: rgba(255, 255, 255, 0.95);
+                border-radius: 8px;
+                box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
+                padding: 0;
+                display: flex;
+                flex-direction: column;
+                backdrop-filter: blur(10px);
+            }
+
+            :host([placement="ne"]) {
+                top: 20px;
+                right: 20px;
+            }
+
+            :host([placement="nw"]) {
+                top: 20px;
+                left: 20px;
+            }
+
+            :host([placement="se"]) {
+                bottom: 20px;
+                right: 20px;
+            }
+
+            :host([placement="sw"]) {
+                bottom: 20px;
+                left: 20px;
+            }
+
+            button {
+                background: none;
+                border: none;
+                padding: 12px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #333;
+                transition: all 0.2s;
+                border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+            }
+
+            button:last-child {
+                border-bottom: none;
+            }
+
+            button:hover {
+                background: rgba(0, 0, 0, 0.05);
+                color: #000;
+            }
+
+            button:active {
+                background: rgba(0, 0, 0, 0.1);
+                transform: scale(0.95);
+            }
+
+            button svg {
+                width: 20px;
+                height: 20px;
+                pointer-events: none;
+            }
+        `;
+
+        const container = document.createElement('div');
+        container.innerHTML = `
+            <button id="zoom-in" title="Zoom In">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11M13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0"/>
+                    <path d="M10.344 11.742q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1 6.5 6.5 0 0 1-1.398 1.4z"/>
+                    <path fill-rule="evenodd" d="M6.5 3a.5.5 0 0 1 .5.5V6h2.5a.5.5 0 0 1 0 1H7v2.5a.5.5 0 0 1-1 0V7H3.5a.5.5 0 0 1 0-1H6V3.5a.5.5 0 0 1 .5-.5"/>
+                </svg>
+            </button>
+            <button id="zoom-out" title="Zoom Out">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M6.5 12a5.5 5.5 0 1 0 0-11 5.5 5.5 0 0 0 0 11M13 6.5a6.5 6.5 0 1 1-13 0 6.5 6.5 0 0 1 13 0"/>
+                    <path d="M10.344 11.742q.044.06.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1 1 0 0 0-.115-.1 6.5 6.5 0 0 1-1.398 1.4z"/>
+                    <path fill-rule="evenodd" d="M3 6.5a.5.5 0 0 1 .5-.5h6a.5.5 0 0 1 0 1h-6a.5.5 0 0 1-.5-.5"/>
+                </svg>
+            </button>
+            <button id="reset" title="Reset View">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                    <path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5M.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5m15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5"/>
+                </svg>
+            </button>
+        `;
+
+        this.shadowRoot.appendChild(style);
+        this.shadowRoot.appendChild(container);
+    }
+
+    _setupEventListeners() {
+        this.shadowRoot.getElementById('zoom-in').addEventListener('click', () => {
+            if (this._targetElement) {
+                const transform = this._targetElement.getTransform();
+                this._targetElement.setZoom(transform.scale * 1.5);
+            }
+        });
+
+        this.shadowRoot.getElementById('zoom-out').addEventListener('click', () => {
+            if (this._targetElement) {
+                const transform = this._targetElement.getTransform();
+                this._targetElement.setZoom(transform.scale / 1.5);
+            }
+        });
+
+        this.shadowRoot.getElementById('reset').addEventListener('click', () => {
+            if (this._targetElement) {
+                this._targetElement.reset();
+            }
+        });
+    }
+
+    _connectToTarget() {
+        const targetId = this.getAttribute('target');
+        if (targetId) {
+            // Wait for the target element to be available
+            const findTarget = () => {
+                this._targetElement = document.getElementById(targetId);
+                if (!this._targetElement) {
+                    // Retry after a short delay if target not found
+                    setTimeout(findTarget, 100);
+                }
+            };
+            findTarget();
+        }
+    }
+
+    _updatePlacement() {
+        // Placement is handled via CSS attribute selectors
+        // No additional logic needed
+    }
+}
+
+customElements.define("pz-controls", PZControlsElement);

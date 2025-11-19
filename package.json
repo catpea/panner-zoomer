@@ -1,13 +1,55 @@
 {
   "name": "panner-zoomer",
   "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+  "description": "A lightweight, high-performance pan and zoom container built as a native web component. Zero dependencies, works everywhere, and fundamental to modern web applications.",
+  "type": "module",
+  "main": "pan-zoom.js",
+  "module": "pan-zoom.js",
+  "exports": {
+    ".": "./pan-zoom.js"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "type": "module"
+  "files": [
+    "pan-zoom.js",
+    "README.md",
+    "ICONS.md"
+  ],
+  "scripts": {
+    "dev": "npx serve .",
+    "start": "npx serve .",
+    "save": "git add .; git commit -m 'Updated Release'; npm version patch; npm publish; git push --follow-tags;"
+  },
+  "keywords": [
+    "pan",
+    "zoom",
+    "pan-zoom",
+    "web-component",
+    "custom-element",
+    "shadow-dom",
+    "canvas",
+    "viewport",
+    "transform",
+    "coordinates",
+    "image-viewer",
+    "map",
+    "diagram",
+    "interactive",
+    "draggable",
+    "vanilla-js",
+    "zero-dependencies",
+    "pz-controls"
+  ],
+  "author": "catpea (https://github.com/catpea)",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/catpea/panner-zoomer.git"
+  },
+  "bugs": {
+    "url": "https://github.com/catpea/panner-zoomer/issues"
+  },
+  "homepage": "https://catpea.github.io/panner-zoomer",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/catpea"
+  }
 }
