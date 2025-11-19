@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PanZoom 3.0 - Production Ready</title>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+        }
+
+        .controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: 15px;
+            border-radius: 8px;
+            z-index: 1000;
+            min-width: 200px;
+        }
+
+        .controls button {
+            width: 100%;
+            padding: 8px;
+            margin: 5px 0;
+            background: #4a9eff;
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .controls button:hover {
+            background: #357abd;
+        }
+
+        .info {
+            font-size: 12px;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 1px solid #444;
+            line-height: 1.5;
+        }
+
+        pan-zoom {
+            display: block;
+            width: 100%;
+            height: calc(100vh - 40px);
+            background: #2a2a2a;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+        }
+
+        /* Demo content styles */
+        .demo-box {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: 3px solid #fff;
+            border-radius: 8px;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            user-select: none;
+        }
+
+        .demo-box:active {
+            cursor: grabbing;
+        }
+
+        .demo-circle {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: radial-gradient(circle, #f093fb 0%, #f5576c 100%);
+            border: 3px solid #fff;
+            border-radius: 50%;
+            cursor: grab;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            user-select: none;
+        }
+
+        .demo-circle:active {
+            cursor: grabbing;
+        }
+
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .demo-image {
+            position: absolute;
+            width: 400px;
+            height: 300px;
+            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb, #f5576c);
+            border: 3px solid #fff;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            font-weight: bold;
+            cursor: grab;
+            user-select: none;
+        }
+
+        .demo-image:active {
+            cursor: grabbing;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="controls">
+    <button onclick="resetView()">Reset View</button>
+    <button onclick="zoomIn()">Zoom In (+)</button>
+    <button onclick="zoomOut()">Zoom Out (-)</button>
+    <button onclick="runTests()">Run Tests</button>
+    <button onclick="addRandomBox()">Add Random Box</button>
+    <div class="info">
+        <div>Scale: <span id="scale">1.00</span></div>
+        <div>Pan: <span id="pan">0, 0</span></div>
+        <div>Cursor: <span id="cursor">-</span></div>
+    </div>
+</div>
+
+<pan-zoom id="pz">
+    <div class="demo-box" style="left: 100px; top: 100px;">Box 1</div>
+    <div class="demo-circle" style="left: 300px; top: 150px;">Circle</div>
+    <div class="demo-image" style="left: 500px; top: 50px;">Image Area</div>
+    <div class="demo-box" style="left: 200px; top: 350px;">Box 2</div>
+</pan-zoom>
+
+<script type="module" src="pan-zoom.js"></script>
+<script>
+/* ============================================================================
+   DEMO - Draggable Content
+
+   This demonstrates how to make content draggable within the pan-zoom space.
+   The key is to use the pan-zoom element's coordinate conversion methods.
+============================================================================ */
+
+const pz = document.getElementById("pz");
+
+// Track all draggable elements
+const draggables = [];
+
+// Make all demo elements draggable
+document.querySelectorAll(".demo-box, .demo-circle, .demo-image").forEach(elem => {
+    const dragState = {
+        element: elem,
+        isDragging: false,
+        worldOffsetX: 0,
+        worldOffsetY: 0
+    };
+
+    draggables.push(dragState);
+
+    elem.addEventListener("pointerdown", e => {
+        e.stopPropagation(); // Prevent pan-zoom from starting to pan
+
+        dragState.isDragging = true;
+
+        // Get current position in world space
+        const currentX = parseFloat(elem.style.left) || 0;
+        const currentY = parseFloat(elem.style.top) || 0;
+
+        // Get pointer position in world space
+        const world = pz.toWorld(e.clientX, e.clientY);
+
+        // Calculate offset
+        dragState.worldOffsetX = world.wx - currentX;
+        dragState.worldOffsetY = world.wy - currentY;
+
+        elem.setPointerCapture(e.pointerId);
+    });
+
+    elem.addEventListener("pointermove", e => {
+        if (!dragState.isDragging) return;
+
+        // Get pointer position in world space
+        const world = pz.toWorld(e.clientX, e.clientY);
+
+        // Calculate new position
+        const newX = world.wx - dragState.worldOffsetX;
+        const newY = world.wy - dragState.worldOffsetY;
+
+        // Update element position
+        elem.style.left = `${newX}px`;
+        elem.style.top = `${newY}px`;
+    });
+
+    elem.addEventListener("pointerup", e => {
+        dragState.isDragging = false;
+        elem.releasePointerCapture(e.pointerId);
+    });
+
+    elem.addEventListener("pointercancel", e => {
+        dragState.isDragging = false;
+        elem.releasePointerCapture(e.pointerId);
+    });
+});
+
+/* ============================================================================
+   UI CONTROLS
+============================================================================ */
+
+function resetView() {
+    pz.reset();
+    updateInfo();
+}
+
+function zoomIn() {
+    const transform = pz.getTransform();
+    pz.setZoom(transform.scale * 1.5);
+    updateInfo();
+}
+
+function zoomOut() {
+    const transform = pz.getTransform();
+    pz.setZoom(transform.scale / 1.5);
+    updateInfo();
+}
+
+function runTests() {
+    pz.runTests();
+}
+
+function addRandomBox() {
+    const box = document.createElement("div");
+    box.className = "demo-box";
+    box.textContent = `Box ${draggables.length + 1}`;
+    box.style.left = `${Math.random() * 600}px`;
+    box.style.top = `${Math.random() * 400}px`;
+    box.style.background = `hsl(${Math.random() * 360}, 70%, 60%)`;
+
+    pz.appendChild(box);
+
+    // Make it draggable
+    const dragState = {
+        element: box,
+        isDragging: false,
+        worldOffsetX: 0,
+        worldOffsetY: 0
+    };
+
+    draggables.push(dragState);
+
+    box.addEventListener("pointerdown", e => {
+        e.stopPropagation();
+        dragState.isDragging = true;
+
+        const currentX = parseFloat(box.style.left) || 0;
+        const currentY = parseFloat(box.style.top) || 0;
+        const world = pz.toWorld(e.clientX, e.clientY);
+
+        dragState.worldOffsetX = world.wx - currentX;
+        dragState.worldOffsetY = world.wy - currentY;
+
+        box.setPointerCapture(e.pointerId);
+    });
+
+    box.addEventListener("pointermove", e => {
+        if (!dragState.isDragging) return;
+        const world = pz.toWorld(e.clientX, e.clientY);
+        box.style.left = `${world.wx - dragState.worldOffsetX}px`;
+        box.style.top = `${world.wy - dragState.worldOffsetY}px`;
+    });
+
+    box.addEventListener("pointerup", () => {
+        dragState.isDragging = false;
+    });
+}
+
+// Update info display
+function updateInfo() {
+    const transform = pz.getTransform();
+    document.getElementById("scale").textContent = transform.scale.toFixed(2);
+    document.getElementById("pan").textContent =
+        `${Math.round(transform.panX)}, ${Math.round(transform.panY)}`;
+}
+
+// Track cursor position
+pz.addEventListener("pointermove", e => {
+    const world = pz.toWorld(e.clientX, e.clientY);
+    document.getElementById("cursor").textContent =
+        `${Math.round(world.wx)}, ${Math.round(world.wy)}`;
+});
+
+// Listen to transform events
+pz.addEventListener("pztransform", () => {
+    updateInfo();
+});
+
+// Run tests on load
+console.log("%cPanZoom 3.0 initialized. Click 'Run Tests' to verify functionality.",
+    "color: #4a9eff; font-size: 14px;");
+
+</script>
+
+</body>
+</html>
