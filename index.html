@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>PanZoom 3.0 - Production Ready</title>
+    <title>PannerZoomer 3.0 - Production Ready</title>
 
     <style>
         body {
@@ -27,7 +27,7 @@
             backdrop-filter: blur(10px);
         }
 
-        pan-zoom {
+        panner-zoomer {
             display: block;
             width: 100%;
             height: calc(100vh - 40px);
@@ -111,7 +111,7 @@
 
 <body>
 
-<pz-controls target="pz" placement="ne"></pz-controls>
+<panner-zoomer-controls target="pz" placement="ne"></panner-zoomer-controls>
 
 <div class="info">
     <div>Scale: <span id="scale">1.00</span></div>
@@ -119,20 +119,20 @@
     <div>Cursor: <span id="cursor">-</span></div>
 </div>
 
-<pan-zoom id="pz">
+<panner-zoomer id="pz">
     <div class="demo-box" style="left: 100px; top: 100px;">Box 1</div>
     <div class="demo-circle" style="left: 300px; top: 150px;">Circle</div>
     <div class="demo-image" style="left: 500px; top: 50px;">Image Area</div>
     <div class="demo-box" style="left: 200px; top: 350px;">Box 2</div>
-</pan-zoom>
+</panner-zoomer>
 
-<script type="module" src="pan-zoom.js"></script>
+<script type="module" src="panner-zoomer.js"></script>
 <script>
 /* ============================================================================
    DEMO - Draggable Content
 
-   This demonstrates how to make content draggable within the pan-zoom space.
-   The key is to use the pan-zoom element's coordinate conversion methods.
+   This demonstrates how to make content draggable within the panner-zoomer space.
+   The key is to use the panner-zoomer element's coordinate conversion methods.
 ============================================================================ */
 
 const pz = document.getElementById("pz");
@@ -216,7 +216,7 @@ pz.addEventListener("pointermove", e => {
 });
 
 // Listen to transform events
-pz.addEventListener("pz-transform", () => {
+pz.addEventListener("panner-zoomer-transform", () => {
     updateInfo();
 });
 

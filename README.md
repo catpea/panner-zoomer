@@ -1,6 +1,6 @@
-# Pan-Zoom Web Component
+# PannerZoomer Web Component
 
-A lightweight, high-performance pan and zoom container built as a native web component. Zero dependencies, works everywhere, and fundamental to modern web applications.
+A lightweight, high-performance panner zoomer container built as a native web component. Zero dependencies, works everywhere, and fundamental to modern web applications.
 
 ## Features
 
@@ -24,7 +24,7 @@ The simplest way to get started - just wrap your content:
 <html>
 <head>
     <style>
-        pan-zoom {
+        panner-zoomer {
             display: block;
             width: 100%;
             height: 100vh;
@@ -33,11 +33,11 @@ The simplest way to get started - just wrap your content:
     </style>
 </head>
 <body>
-    <script type="module" src="pan-zoom.js"></script>
+    <script type="module" src="panner-zoomer.js"></script>
 
-    <pan-zoom>
+    <panner-zoomer>
         <img src="your-image.jpg" alt="Zoomable image">
-    </pan-zoom>
+    </panner-zoomer>
 </body>
 </html>
 ```
@@ -51,7 +51,7 @@ Add the built-in control panel for zoom in, zoom out, and reset:
 <html>
 <head>
     <style>
-        pan-zoom {
+        panner-zoomer {
             display: block;
             width: 100%;
             height: 100vh;
@@ -60,13 +60,13 @@ Add the built-in control panel for zoom in, zoom out, and reset:
     </style>
 </head>
 <body>
-    <script type="module" src="pan-zoom.js"></script>
+    <script type="module" src="panner-zoomer.js"></script>
 
-    <pz-controls target="viewer" placement="ne"></pz-controls>
+    <panner-zoomer-controls target="viewer" placement="ne"></panner-zoomer-controls>
 
-    <pan-zoom id="viewer">
+    <panner-zoomer id="viewer">
         <img src="your-image.jpg" alt="Zoomable image">
-    </pan-zoom>
+    </panner-zoomer>
 </body>
 </html>
 ```
@@ -79,14 +79,14 @@ Add the built-in control panel for zoom in, zoom out, and reset:
 
 ### Interactive Canvas
 
-Make elements draggable within the pan-zoom space:
+Make elements draggable within the panner-zoomer space:
 
 ```html
 <!DOCTYPE html>
 <html>
 <head>
     <style>
-        pan-zoom {
+        panner-zoomer {
             display: block;
             width: 100%;
             height: 100vh;
@@ -112,13 +112,13 @@ Make elements draggable within the pan-zoom space:
     </style>
 </head>
 <body>
-    <script type="module" src="pan-zoom.js"></script>
+    <script type="module" src="panner-zoomer.js"></script>
 
-    <pz-controls target="canvas" placement="ne"></pz-controls>
+    <panner-zoomer-controls target="canvas" placement="ne"></panner-zoomer-controls>
 
-    <pan-zoom id="canvas">
+    <panner-zoomer id="canvas">
         <div class="draggable-box" style="left: 100px; top: 100px;">Drag me!</div>
-    </pan-zoom>
+    </panner-zoomer>
 
     <script>
         const pz = document.getElementById('canvas');
@@ -128,7 +128,7 @@ Make elements draggable within the pan-zoom space:
         let offsetX = 0, offsetY = 0;
 
         box.addEventListener('pointerdown', e => {
-            e.stopPropagation(); // Prevent pan-zoom from panning
+            e.stopPropagation(); // Prevent panner-zoomer from panning
             isDragging = true;
 
             const currentX = parseFloat(box.style.left) || 0;
@@ -167,7 +167,7 @@ Control pan and zoom via JavaScript:
 <html>
 <head>
     <style>
-        pan-zoom {
+        panner-zoomer {
             display: block;
             width: 100%;
             height: 100vh;
@@ -193,7 +193,7 @@ Control pan and zoom via JavaScript:
     </style>
 </head>
 <body>
-    <script type="module" src="pan-zoom.js"></script>
+    <script type="module" src="panner-zoomer.js"></script>
 
     <div class="custom-controls">
         <button onclick="zoomToCenter()">Zoom to Center</button>
@@ -201,9 +201,9 @@ Control pan and zoom via JavaScript:
         <button onclick="resetView()">Reset</button>
     </div>
 
-    <pan-zoom id="viewer">
+    <panner-zoomer id="viewer">
         <img src="your-image.jpg" alt="Zoomable image" style="position: absolute;">
-    </pan-zoom>
+    </panner-zoomer>
 
     <script>
         const pz = document.getElementById('viewer');
@@ -232,9 +232,9 @@ Control pan and zoom via JavaScript:
 Set initial pan and zoom using HTML attributes:
 
 ```html
-<pan-zoom id="viewer" panx="100" pany="-50" zoom="2">
+<panner-zoomer id="viewer" panx="100" pany="-50" zoom="2">
     <img src="your-image.jpg" alt="Zoomable image">
-</pan-zoom>
+</panner-zoomer>
 ```
 
 The attributes automatically update as users interact:
@@ -263,17 +263,17 @@ React to pan and zoom changes:
     const pz = document.getElementById('viewer');
 
     // Listen to all transform changes (pan or zoom)
-    pz.addEventListener('pz-transform', (e) => {
+    pz.addEventListener('panner-zoomer-transform', (e) => {
         console.log('Transform:', e.detail);
         // { scale: 1.5, panX: 100, panY: 50 }
     });
 
     // Listen to specific events
-    pz.addEventListener('pz-pointerdown', (e) => {
+    pz.addEventListener('panner-zoomer-pointerdown', (e) => {
         console.log('Pan started at:', e.detail.wx, e.detail.wy);
     });
 
-    pz.addEventListener('pz-wheel', (e) => {
+    pz.addEventListener('panner-zoomer-wheel', (e) => {
         console.log('Zoom:', e.detail.oldScale, '->', e.detail.newScale);
     });
 </script>
@@ -281,7 +281,7 @@ React to pan and zoom changes:
 
 ## API Reference
 
-### `<pan-zoom>` Element
+### `<panner-zoomer>` Element
 
 #### Attributes
 
@@ -414,11 +414,11 @@ console.log('Tests passed:', allPassed);
 
 All events include detailed information in `event.detail`.
 
-##### `pz-transform`
+##### `panner-zoomer-transform`
 Fired whenever the transform changes (pan or zoom).
 
 ```javascript
-pz.addEventListener('pz-transform', (e) => {
+pz.addEventListener('panner-zoomer-transform', (e) => {
     console.log(e.detail.scale);  // Current zoom
     console.log(e.detail.panX);   // Current pan X
     console.log(e.detail.panY);   // Current pan Y
@@ -429,11 +429,11 @@ pz.addEventListener('pz-transform', (e) => {
 
 ---
 
-##### `pz-pointerdown`
+##### `panner-zoomer-pointerdown`
 Fired when panning starts.
 
 ```javascript
-pz.addEventListener('pz-pointerdown', (e) => {
+pz.addEventListener('panner-zoomer-pointerdown', (e) => {
     console.log('Clicked at world:', e.detail.wx, e.detail.wy);
 });
 ```
@@ -455,37 +455,37 @@ pz.addEventListener('pz-pointerdown', (e) => {
 
 ---
 
-##### `pz-pointermove`
+##### `panner-zoomer-pointermove`
 Fired during panning.
 
 ```javascript
-pz.addEventListener('pz-pointermove', (e) => {
+pz.addEventListener('panner-zoomer-pointermove', (e) => {
     console.log('Panning to:', e.detail.wx, e.detail.wy);
 });
 ```
 
-**Detail:** Same as `pz-pointerdown`
+**Detail:** Same as `panner-zoomer-pointerdown`
 
 ---
 
-##### `pz-pointerup`
+##### `panner-zoomer-pointerup`
 Fired when panning ends.
 
 ```javascript
-pz.addEventListener('pz-pointerup', (e) => {
+pz.addEventListener('panner-zoomer-pointerup', (e) => {
     console.log('Panning ended');
 });
 ```
 
-**Detail:** Same as `pz-pointerdown`
+**Detail:** Same as `panner-zoomer-pointerdown`
 
 ---
 
-##### `pz-wheel`
+##### `panner-zoomer-wheel`
 Fired during zoom (mouse wheel).
 
 ```javascript
-pz.addEventListener('pz-wheel', (e) => {
+pz.addEventListener('panner-zoomer-wheel', (e) => {
     console.log('Zoomed from', e.detail.oldScale, 'to', e.detail.newScale);
 });
 ```
@@ -509,23 +509,23 @@ pz.addEventListener('pz-wheel', (e) => {
 
 ---
 
-### `<pz-controls>` Element
+### `<panner-zoomer-controls>` Element
 
 #### Attributes
 
 | Attribute | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `target` | string | - | ID of the pan-zoom element to control (required) |
+| `target` | string | - | ID of the panner-zoomer element to control (required) |
 | `placement` | string | `"ne"` | Position: `"ne"`, `"nw"`, `"se"`, or `"sw"` |
 
 #### Example
 
 ```html
 <!-- Top-right corner (default) -->
-<pz-controls target="viewer" placement="ne"></pz-controls>
+<panner-zoomer-controls target="viewer" placement="ne"></panner-zoomer-controls>
 
 <!-- Bottom-left corner -->
-<pz-controls target="viewer" placement="sw"></pz-controls>
+<panner-zoomer-controls target="viewer" placement="sw"></panner-zoomer-controls>
 ```
 
 ---
@@ -534,38 +534,38 @@ pz.addEventListener('pz-wheel', (e) => {
 
 ### Image Viewer
 ```html
-<pan-zoom id="viewer">
+<panner-zoomer id="viewer">
     <img src="large-image.jpg" style="position: absolute;">
-</pan-zoom>
+</panner-zoomer>
 ```
 
 ### Interactive Map
 ```html
-<pan-zoom id="map">
+<panner-zoomer id="map">
     <svg viewBox="0 0 1000 1000" style="position: absolute;">
         <!-- SVG map content -->
     </svg>
-</pan-zoom>
+</panner-zoomer>
 ```
 
 ### Diagram Editor
 ```html
-<pan-zoom id="editor">
+<panner-zoomer id="editor">
     <div class="canvas">
         <!-- Draggable nodes, connections, etc. -->
     </div>
-</pan-zoom>
+</panner-zoomer>
 ```
 
 ### Photo Gallery
 ```html
-<pan-zoom id="gallery">
+<panner-zoomer id="gallery">
     <div style="position: relative; width: 2000px; height: 2000px;">
         <img src="photo1.jpg" style="position: absolute; left: 0; top: 0;">
         <img src="photo2.jpg" style="position: absolute; left: 500px; top: 0;">
         <!-- More photos... -->
     </div>
-</pan-zoom>
+</panner-zoomer>
 ```
 
 ---
@@ -587,9 +587,9 @@ ISC
 
 ---
 
-## Why Pan-Zoom is Fundamental to the Web
+## Why PannerZoomer is Fundamental to the Web
 
-Pan and zoom are core interactions in modern web applications:
+Panner and zoomer interactions are core to modern web applications:
 
 - **Image viewers** - View high-resolution images
 - **Maps** - Navigate geographic data (Google Maps, OpenStreetMap)
@@ -599,4 +599,4 @@ Pan and zoom are core interactions in modern web applications:
 - **CAD/Engineering** - View technical drawings and schematics
 - **Games** - Navigate game worlds and strategy maps
 
-This component provides a rock-solid foundation for any pan-zoom interface, with accurate math and industry-standard behavior.
+This component provides a rock-solid foundation for any panner-zoomer interface, with accurate math and industry-standard behavior.

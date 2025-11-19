@@ -1,8 +1,8 @@
 
 /* ============================================================================
-   PanZoomElement 3.0 - Production Ready
+   PannerZoomerElement 3.0 - Production Ready
 
-   A robust, high-performance pan and zoom container for complex applications.
+   A robust, high-performance panner zoomer container for complex applications.
 
    Features:
    - Accurate coordinate transformations at any zoom level
@@ -14,9 +14,9 @@
    - Works with any slotted content
 
    Usage:
-     <pan-zoom>
+     <panner-zoomer>
        <your-content></your-content>
-     </pan-zoom>
+     </panner-zoomer>
 
    API:
      element.setPan(x, y)           - Set pan position
@@ -27,12 +27,12 @@
      element.toScreen(worldX, worldY)  - Convert world to screen coords
 
    Events:
-     pz-pointerdown, pz-pointermove, pz-pointerup - Pan events
-     pz-wheel                                      - Zoom events
-     pz-transform                                  - Any transform change
+     panner-zoomer-pointerdown, panner-zoomer-pointermove, panner-zoomer-pointerup - Pan events
+     panner-zoomer-wheel                                                            - Zoom events
+     panner-zoomer-transform                                                        - Any transform change
 ============================================================================ */
 
-class PanZoomElement extends HTMLElement {
+class PannerZoomerElement extends HTMLElement {
     static get observedAttributes() {
         return ['panx', 'pany', 'zoom'];
     }
@@ -249,7 +249,7 @@ class PanZoomElement extends HTMLElement {
         this._updatingAttributes = false;
 
         // Dispatch transform event
-        this.dispatchEvent(new CustomEvent("pz-transform", {
+        this.dispatchEvent(new CustomEvent("panner-zoomer-transform", {
             detail: {
                 scale: this._scale,
                 panX: this._panX,
@@ -276,7 +276,7 @@ class PanZoomElement extends HTMLElement {
         this._viewport.classList.add("panning");
         this._viewport.setPointerCapture(e.pointerId);
 
-        this.dispatchEvent(new CustomEvent("pz-pointerdown", {
+        this.dispatchEvent(new CustomEvent("panner-zoomer-pointerdown", {
             detail: this._getTransformInfo(e)
         }));
     }
@@ -296,7 +296,7 @@ class PanZoomElement extends HTMLElement {
             this._lastPointerX = e.clientX;
             this._lastPointerY = e.clientY;
 
-            this.dispatchEvent(new CustomEvent("pz-pointermove", {
+            this.dispatchEvent(new CustomEvent("panner-zoomer-pointermove", {
                 detail: this._getTransformInfo(e)
             }));
         }
@@ -307,7 +307,7 @@ class PanZoomElement extends HTMLElement {
             this._isPanning = false;
             this._viewport.classList.remove("panning");
 
-            this.dispatchEvent(new CustomEvent("pz-pointerup", {
+            this.dispatchEvent(new CustomEvent("panner-zoomer-pointerup", {
                 detail: this._getTransformInfo(e)
             }));
         }
@@ -346,7 +346,7 @@ class PanZoomElement extends HTMLElement {
 
         this._applyTransform();
 
-        this.dispatchEvent(new CustomEvent("pz-wheel", {
+        this.dispatchEvent(new CustomEvent("panner-zoomer-wheel", {
             detail: {
                 ...this._getTransformInfo(e),
                 oldScale: this._scale / factor,
@@ -430,7 +430,7 @@ class PanZoomElement extends HTMLElement {
 
     runTests() {
         console.log("%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "color: #4a9eff; font-weight: bold;");
-        console.log("%cPanZoom 3.0 - Test Suite", "color: #4a9eff; font-weight: bold; font-size: 16px;");
+        console.log("%cPannerZoomer 3.0 - Test Suite", "color: #4a9eff; font-weight: bold; font-size: 16px;");
         console.log("%c━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━", "color: #4a9eff; font-weight: bold;");
 
         const tests = [
@@ -658,22 +658,22 @@ class PanZoomElement extends HTMLElement {
 }
 
 // Register the custom element
-customElements.define("pan-zoom", PanZoomElement);
+customElements.define("panner-zoomer", PannerZoomerElement);
 
 /* ============================================================================
-   PZ-CONTROLS - Control Panel Component
+   PANNER-ZOOMER-CONTROLS - Control Panel Component
 
-   A companion component for pan-zoom that provides UI controls.
+   A companion component for panner-zoomer that provides UI controls.
 
    Usage:
-     <pz-controls target="pz-id" placement="ne"></pz-controls>
+     <panner-zoomer-controls target="pz-id" placement="ne"></panner-zoomer-controls>
 
    Attributes:
-     target    - ID of the pan-zoom element to control
+     target    - ID of the panner-zoomer element to control
      placement - Position: ne (northeast), nw (northwest), se (southeast), sw (southwest)
 ============================================================================ */
 
-class PZControlsElement extends HTMLElement {
+class PannerZoomerControlsElement extends HTMLElement {
     static get observedAttributes() {
         return ['target', 'placement'];
     }
@@ -838,4 +838,4 @@ class PZControlsElement extends HTMLElement {
     }
 }
 
-customElements.define("pz-controls", PZControlsElement);
+customElements.define("panner-zoomer-controls", PannerZoomerControlsElement);

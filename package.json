@@ -1,15 +1,15 @@
 {
   "name": "panner-zoomer",
   "version": "1.0.1",
-  "description": "A lightweight, high-performance pan and zoom container built as a native web component. Zero dependencies, works everywhere, and fundamental to modern web applications.",
+  "description": "A lightweight, high-performance panner zoomer container built as a native web component. Zero dependencies, works everywhere, and fundamental to modern web applications.",
   "type": "module",
-  "main": "pan-zoom.js",
-  "module": "pan-zoom.js",
+  "main": "panner-zoomer.js",
+  "module": "panner-zoomer.js",
   "exports": {
-    ".": "./pan-zoom.js"
+    ".": "./panner-zoomer.js"
   },
   "files": [
-    "pan-zoom.js",
+    "panner-zoomer.js",
     "README.md",
     "ICONS.md"
   ],
@@ -19,9 +19,9 @@
     "save": "git add .; git commit -m 'Updated Release'; npm version patch; npm publish; git push --follow-tags;"
   },
   "keywords": [
-    "pan",
-    "zoom",
-    "pan-zoom",
+    "panner",
+    "zoomer",
+    "panner-zoomer",
     "web-component",
     "custom-element",
     "shadow-dom",
@@ -36,7 +36,7 @@
     "draggable",
     "vanilla-js",
     "zero-dependencies",
-    "pz-controls"
+    "panner-zoomer-controls"
   ],
   "author": "catpea (https://github.com/catpea)",
   "license": "MIT",
