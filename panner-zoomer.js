@@ -35,6 +35,10 @@
      element.toWorld(screenX, screenY) - Convert screen to world coords
      element.toScreen(worldX, worldY)  - Convert world to screen coords
      element.setPanOnContent(enabled) - Enable/disable panning on overlay content
+     element.setManageCursor(enabled) - Enable/disable cursor style management
+     element.enable()               - Enable pan/zoom interactions
+     element.disable()              - Disable pan/zoom interactions
+     element.isEnabled()            - Check if pan/zoom is enabled
 
    Events:
      panner-zoomer-pointerdown, panner-zoomer-pointermove, panner-zoomer-pointerup - Pan events
@@ -72,6 +76,8 @@ class PannerZoomerElement extends HTMLElement {
         this._maxScale = 10;
         this._zoomIntensity = 0.15;
         this._panOnContent = false; // Allow panning on viewport content/overlays
+        this._enabled = true; // Enable/disable panning and zooming
+        this._manageCursor = true; // Control whether to change cursor styles
 
         // Bind event handlers
         this._setupEventListeners();
@@ -127,11 +133,10 @@ class PannerZoomerElement extends HTMLElement {
                 width: 100%;
                 height: 100%;
                 overflow: hidden;
-                cursor: grab;
             }
 
             .viewport.panning {
-                cursor: grabbing;
+                /* Cursor will be managed programmatically if enabled */
             }
 
             .content {
@@ -274,13 +279,18 @@ class PannerZoomerElement extends HTMLElement {
     ======================================================================== */
 
     _onPointerDown(e) {
+        // Check if panner-zoomer is enabled
+        if (!this._enabled) {
+            return;
+        }
+
         // Determine if panning should be enabled for this target
         const shouldPan = this._panOnContent
             ? this._shouldEnablePan(e.target)
             : e.target === this._viewport;
 
         if (!shouldPan) {
-            return;
+            //return;
         }
 
         this._isPanning = true;
@@ -288,6 +298,9 @@ class PannerZoomerElement extends HTMLElement {
         this._lastPointerY = e.clientY;
 
         this._viewport.classList.add("panning");
+        if (this._manageCursor) {
+            this._viewport.style.cursor = 'grabbing';
+        }
         this._viewport.setPointerCapture(e.pointerId);
 
         this.dispatchEvent(new CustomEvent("panner-zoomer-pointerdown", {
@@ -301,12 +314,14 @@ class PannerZoomerElement extends HTMLElement {
      */
     _shouldEnablePan(target) {
         // Check if target is the viewport or a descendant
-        if (target !== this._viewport && !this._viewport.contains(target)) {
+        if (target !== this._viewport && !this._content.contains(target)) {
             return false;
         }
 
+
         // Check if element or any ancestor has data-no-pan attribute
         let element = target;
+
         while (element && element !== this._viewport) {
             if (element.hasAttribute && element.hasAttribute('data-no-pan')) {
                 return false;
@@ -342,6 +357,9 @@ class PannerZoomerElement extends HTMLElement {
         if (this._isPanning) {
             this._isPanning = false;
             this._viewport.classList.remove("panning");
+            if (this._manageCursor && this._enabled) {
+                this._viewport.style.cursor = 'grab';
+            }
 
             this.dispatchEvent(new CustomEvent("panner-zoomer-pointerup", {
                 detail: this._getTransformInfo(e)
@@ -357,6 +375,11 @@ class PannerZoomerElement extends HTMLElement {
     ======================================================================== */
 
     _onWheel(e) {
+        // Check if panner-zoomer is enabled
+        if (!this._enabled) {
+            return;
+        }
+
         e.preventDefault();
 
         // Get world coordinates of the cursor before zoom
@@ -464,6 +487,49 @@ class PannerZoomerElement extends HTMLElement {
      */
     setPanOnContent(enabled) {
         this._panOnContent = enabled;
+    }
+
+    /**
+     * Set whether panner-zoomer should manage cursor styles
+     * @param {boolean} enabled - If true, cursor will change during pan/zoom operations
+     */
+    setManageCursor(enabled) {
+        this._manageCursor = enabled;
+        // Update cursor immediately based on current state
+        if (enabled) {
+            this._viewport.style.cursor = this._enabled ? 'grab' : 'default';
+        } else {
+            this._viewport.style.cursor = '';
+        }
+    }
+
+    /**
+     * Enable panner-zoomer (allow panning and zooming)
+     */
+    enable() {
+        this._enabled = true;
+        if (this._manageCursor) {
+            this._viewport.style.cursor = 'grab';
+        }
+    }
+
+    /**
+     * Disable panner-zoomer (prevent panning and zooming)
+     */
+    disable() {
+        this._enabled = false;
+        this._isPanning = false;
+        this._viewport.classList.remove("panning");
+        if (this._manageCursor) {
+            this._viewport.style.cursor = 'default';
+        }
+    }
+
+    /**
+     * Check if panner-zoomer is enabled
+     */
+    isEnabled() {
+        return this._enabled;
     }
 
     /* ========================================================================
