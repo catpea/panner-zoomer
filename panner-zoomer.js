@@ -36,6 +36,7 @@
      element.toScreen(worldX, worldY)  - Convert world to screen coords
      element.setPanOnContent(enabled) - Enable/disable panning on overlay content
      element.setManageCursor(enabled) - Enable/disable cursor style management
+     element.setPanButtons(buttons) - Set which mouse buttons trigger panning (default: [1] middle only)
      element.enable()               - Enable pan/zoom interactions
      element.disable()              - Disable pan/zoom interactions
      element.isEnabled()            - Check if pan/zoom is enabled
@@ -78,6 +79,7 @@ class PannerZoomerElement extends HTMLElement {
         this._panOnContent = false; // Allow panning on viewport content/overlays
         this._enabled = true; // Enable/disable panning and zooming
         this._manageCursor = true; // Control whether to change cursor styles
+        this._panButtons = [1]; // Which mouse buttons trigger panning (0=left, 1=middle, 2=right)
 
         // Bind event handlers
         this._setupEventListeners();
@@ -281,6 +283,11 @@ class PannerZoomerElement extends HTMLElement {
     _onPointerDown(e) {
         // Check if panner-zoomer is enabled
         if (!this._enabled) {
+            return;
+        }
+
+        // Check if this mouse button is allowed to trigger panning
+        if (!this._panButtons.includes(e.button)) {
             return;
         }
 
@@ -530,6 +537,19 @@ class PannerZoomerElement extends HTMLElement {
      */
     isEnabled() {
         return this._enabled;
+    }
+
+    /**
+     * Set which mouse buttons can trigger panning
+     * @param {Array<number>} buttons - Array of button codes (0=left, 1=middle, 2=right)
+     * Example: setPanButtons([1]) - Only middle button
+     *          setPanButtons([0, 1]) - Left or middle button
+     *          setPanButtons([1, 2]) - Middle or right button
+     */
+    setPanButtons(buttons) {
+        if (Array.isArray(buttons)) {
+            this._panButtons = buttons;
+        }
     }
 
     /* ========================================================================
